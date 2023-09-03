@@ -43,3 +43,50 @@
 
 #### Fuel Consumption Comb (mpg)
 ![fc2_sc](images/fcomb2_sc.png)
+
+- The relation between all possible combinations of pairs of variables are shown by the following Pair Plots:
+![pair_plot1](images/pp_1.png)
+![pair_plot2](images/pp_2.png)
+
+- The variation with respect to the target variable can also be visualized using Box Plots that are grouped by the target variable i.e. CO2 Emissions(g/km):
+#### Make
+![](images/make_box.png)
+
+#### Vehicle Class
+![](images/vc_box.png)
+
+#### Engine Size(L)
+![](images/es_box.png)
+
+#### Cylinders
+![](images/cyl_box.png)
+
+#### Transmission
+![](images/tr_box.png)
+
+#### Fuel Type
+![](images/ft_box.png)
+
+#### Fuel Consumption Comb (mpg)
+![](images/fcomb2_box.png)
+
+- The follwing correlation heatmap shows the correlation coefficients that indicate the level of dependency between all pairs of variables:
+![corr](images/corr.png)
+
+- The categorical features are visualized using distribution plots (i.e. Pie charts) as follows:
+#### Make
+![](images/make_pie.png)
+
+#### Vehicle Class
+![](images/vc_pie.png)
+
+#### Transmission
+![](images/tr_pie.png)
+
+#### Fuel Type
+![](images/ft_pie.png)
+
+
+
+
+Make,Model,Vehicle Class,Engine Size(L),Cylinders,Transmission,Fuel Type,Fuel Consumption City (L/100 km),Fuel Consumption Hwy (L/100 km),Fuel Consumption Comb (L/100 km),Fuel Consumption Comb (mpg)
