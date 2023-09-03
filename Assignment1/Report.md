@@ -71,7 +71,8 @@
 #### Fuel Consumption Comb (mpg)
 ![](images/fcomb2_box.png)
 
-- The follwing correlation heatmap shows the correlation coefficients that indicate the level of dependency between all pairs of variables:
+- The follwing correlation heatmap shows the correlation coefficients that indicate the level of dependency between all pairs of variables:  
+
 ![corr](images/corr.png)
 
 - The categorical features are visualized using distribution plots (i.e. Pie charts) as follows:
