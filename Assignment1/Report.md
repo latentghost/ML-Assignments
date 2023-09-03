@@ -118,17 +118,17 @@
 - A Linear Regression model is trained on the pre-processed data and the performance of the model on the Test data is reported using metrics such as **MSE**, **RMSE**, etc
 - Results are as follows:
     - Performance on Train set:  
-        MSE: 292.3107333654392  
-        RMSE: 17.09709722044766  
-        R2 score: 0.9141586281491605  
-        Adjusted R2 score: 0.913998476336006  
-        MAE: 11.604193652364458  
+            MSE: 292.3107333654392  
+            RMSE: 17.09709722044766  
+            R2 score: 0.9141586281491605  
+            Adjusted R2 score: 0.913998476336006  
+            MAE: 11.604193652364458  
 
     - Performance on Test set:  
-        MSE: 279.37573811472396  
-        RMSE: 16.714536730484753  
-        R2 score: 0.9200728127273329  
-        Adjusted R2 score: 0.9199236948406302  
-        MAE: 11.319165859676161  
+            MSE: 279.37573811472396  
+            RMSE: 16.714536730484753  
+            R2 score: 0.9200728127273329  
+            Adjusted R2 score: 0.9199236948406302  
+            MAE: 11.319165859676161  
 
 <!-- Make,Model,Vehicle Class,Engine Size(L),Cylinders,Transmission,Fuel Type,Fuel Consumption City (L/100 km),Fuel Consumption Hwy (L/100 km),Fuel Consumption Comb (L/100 km),Fuel Consumption Comb (mpg) -->
