@@ -44,7 +44,8 @@
 #### Fuel Consumption Comb (mpg)
 ![fc2_sc](images/fcomb2_sc.png)
 
-- The relation between all possible combinations of pairs of variables are shown by the following Pair Plots:
+- The relation between all possible combinations of pairs of variables are shown by the following Pair Plots:  
+
 ![pair_plot1](images/pp_1.png)
 ![pair_plot2](images/pp_2.png)
 
