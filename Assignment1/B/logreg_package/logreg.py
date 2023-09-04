@@ -7,27 +7,34 @@ from sklearn.model_selection import train_test_split
 
 
 class LogisticRegression:
-    def __init__(self,data,target,test_size=0.2,val_size=0,regularization=None):
+    def __init__(self,data,target,test_size=0.2,val_size=0.1,regularization=None,f='sigmoid'):
         self.data       = data
-        self.n_s        = self.data.shape[0]
-        self.n_f        = self.data.shape[1]
         
         self.ts_size    = test_size
         self.val_size   = val_size
 
         self.target     = target
-        self.epochs     = []
         self.reg        = regularization
+        self.f          = f
 
         self.X          = self.data[:,:self.target]
         self.Y          = self.data[:,self.target]
 
-        self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(self.X, self.Y, test_size=self.ts_size, shuffle=True,
-                                                                                random_state=42, stratify=self.Y)
-        
-        self.X_train, self.X_val, self.Y_train, self.Y_val   = train_test_split(self.X_train, self.Y_train, test_size=self.val_size,
-                                                                                random_state=42)
+    
+    def func(self,z):
+        if(self.f == 'sigmoid'):
+            return 1/(1 + np.exp(-z))
+        else:
+            return np.tanh(z)
+    
 
+    def loss(self,Y_true,Y_pred):
+        loss            = np.mean(Y_true * np.log(Y_pred + 1e-1) + (1-Y_true) * np.log(1-Y_pred + 1e-1))
+
+        return -loss
+    
+
+    def train(self,lr=0.1,n_epochs=1000,weights=None,batch_size=21):
         self.tr_loss    = []
         self.val_loss   = []
         self.ts_loss    = []
@@ -36,55 +43,103 @@ class LogisticRegression:
         self.val_acc    = []
         self.ts_acc     = []
 
-    
-    def sigm(self,z):
-        return 1/(1 + np.exp(-z))
-    
+        self.tr_pr      = []
+        self.val_pr     = []
+        self.ts_pr      = []
 
-    def loss(self,Y_true,Y_pred):
-        eps = 1e-10
+        self.tr_re      = []
+        self.val_re     = []
+        self.ts_re      = []
 
-        Y_pred          = np.clip(Y_pred,eps,1-eps)
-        loss            = np.mean(Y_true * np.log(Y_pred) + (1-Y_true) * np.log(1-Y_pred))
+        self.tr_f1      = []
+        self.val_f1     = []
+        self.ts_f1      = []
 
-        return -loss
-    
-
-    def train(self,lr=0.1,n_epochs=1000,weights=None):
+        self.epochs     = n_epochs
         self.lr         = lr
+        self.batch      = batch_size
+
+        bias_term       = np.ones((self.X.shape[0],1))
+        self.data       = np.hstack((self.X,bias_term))
+
+        self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(self.X, 
+                                                                                self.Y, 
+                                                                                test_size=self.ts_size,
+                                                                                random_state=42,
+                                                                                stratify=self.Y)
+
+        if(self.val_size>0):
+            self.X_train, self.X_val, self.Y_train, self.Y_val = train_test_split(self.X_train, 
+                                                                                    self.Y_train, 
+                                                                                    test_size=self.val_size,
+                                                                                    random_state=42,
+                                                                                    stratify=self.Y_train)
+        
+        self.n_s,self.n_f       = self.X_train.shape
 
         if(weights is None):
-            self.weights = np.zeros(self.X_train.shape[1])
+            self.weights = np.ones(self.n_f)
+            self.weights += 1
         else:
             self.weights = weights
 
 
-        for n in range(n_epochs):
-            self.epochs.append(n+1)
+        for _ in range(n_epochs):
 
-            for i in range(self.X_train.shape[0]):
-                xi      = self.X_train[i]
-                yi      = self.Y_train[i]
+            if(self.val_size>0):
+                ## Validation set performance metrics
+                self.Y_val_pred = self.func(np.dot(self.X_val,self.weights))
+                self.Y_val_pred = np.where(self.Y_val_pred >= 0.5, 1, 0)
 
-                z       = np.dot(xi,self.weights)
-                y_pred  = self.sigm(z)
+                self.val_loss.append(self.loss(self.Y_val,self.Y_val_pred))
 
-                self.weights   -= self.lr * (np.dot(xi.T,(y_pred - yi)))
+                a,p,r,f         = self.calculate_metrics(self.Y_val,self.Y_val_pred)
+                self.val_acc.append(a)
+                self.val_pr.append(p)
+                self.val_re.append(r)
+                self.val_f1.append(f)
 
-            self.Y_pred     = self.sigm(np.dot(self.X_train,self.weights))
+
+            ## Training set performance metrics
+            z = np.dot(self.X_train,self.weights)
+            self.Y_pred = self.func(z)
+            self.Y_pred = np.where(self.Y_pred >= 0.5, 1, 0)
 
             self.tr_loss.append(self.loss(self.Y_train,self.Y_pred))
-            self.tr_acc.append(self.calculate_metrics(self.Y_train, self.Y_pred)[0])
 
-            self.Y_val_pred = self.sigm(np.dot(self.X_val,self.weights))
+            a,p,r,f     = self.calculate_metrics(self.Y_train, self.Y_pred)
+            self.tr_acc.append(a)
+            self.tr_pr.append(p)
+            self.tr_re.append(r)
+            self.tr_f1.append(f)
 
-            self.val_loss.append(self.loss(self.Y_val,self.Y_val_pred))
-            self.val_acc.append(self.calculate_metrics(self.Y_val, self.Y_val_pred)[0])
+
+            inds        = np.arange(self.n_s)
+            np.random.shuffle(inds)
+
+            for i in range(0,self.n_s,self.batch):
+                j               = min(i+self.batch,self.n_s)
+                
+                X_batch    = self.X_train[i:j]
+                Y_batch    = self.Y_train[i:j]
+
+                z_batch         = np.dot(X_batch,self.weights)
+                y_pred          = self.func(z_batch)
+
+                gradient        = np.dot(X_batch.T,(y_pred-Y_batch))/self.batch
+
+                self.weights   -= self.lr * gradient
 
     
     def predict(self):
-        self.Y_test_pred    = self.sigm(np.dot(self.X_test,self.weights))
+        self.Y_test_pred    = self.func(np.dot(self.X_test,self.weights))
         self.ts_loss        = self.loss(self.Y_test_pred,self.Y_test)
+
+        a,p,r,f         = self.calculate_metrics(self.Y_test,self.Y_test_pred)
+        self.ts_acc.append(a)
+        self.ts_pr.append(p)
+        self.ts_re.append(r)
+        self.ts_f1.append(f)
 
 
     def calculate_metrics(self, Y_true, Y_pred):
