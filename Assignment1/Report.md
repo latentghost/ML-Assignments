@@ -76,7 +76,7 @@
 ![](images/fcomb2_box.png)
 
 ### Correlation Heatmap
-- The follwing correlation heatmap shows the correlation coefficients that indicate the level of dependency between all pairs of variables:  
+- The following correlation heatmap shows the correlation coefficients that indicate the level of dependency between all pairs of variables:  
 
 ![corr](images/corr.png)
 
@@ -362,4 +362,81 @@
 
 - As can be seen from the performance metrics of this model, the performance is not as good as the original model trained on the raw data which uses **Batch Gradient Descent** as its gradient descent algorithm.
 
-<!-- Make,Model,Vehicle Class,Engine Size(L),Cylinders,Transmission,Fuel Type,Fuel Consumption City (L/100 km),Fuel Consumption Hwy (L/100 km),Fuel Consumption Comb (L/100 km),Fuel Consumption Comb (mpg) -->
+
+## Section B
+
+### Logistic Regression
+- **Logistic Regression** algorithm is implemented as a class which takes as input the **dataset**, the **train:test:validation set** split ratios, and the **activation function** to use when initialising an instance of the class.
+- This implementation of Logistic Regression uses **Mini-Batch Gradient Descent**.
+- When called to train the model on the chosen dataset, it takes as input the **learning rate**, the **number of iterations**, the **weights** to initialise, the **batch size** to use for Mini-BGD, and the **regularization** to use and their corresponding hyperparameters.
+- For **Batch Size** = 1, the algorithm translates to **Stochastic Gradient Descent**.
+
+### Training the Model
+- An instance of the logistic regression is trained for each of the required learning rates - ```[1,0.1,0.01,0.001]``` - and the corresponding training loss, validation loss, training accuracy, and validation accuracy reported through the graphs shown below each code block.
+- The best set of training and validation accuracy is seen for **Learning Rate = ```0.001```** (with Max iterations set to a constant = ```200```)
+- The best performance on the test set is also seen for **Learning Rate = ```0.001```** (with Max iterations set to a constant = ```200```) with **Accuracy = ```74.025%```** and **Recall = ```81.481%```**
+- The **F1 score** (= **```0.6875```)** also indicates good performance.  
+
+![](images/lr_raw.png)  
+- **Test Set Results**:
+    Accuracy : 74.02597402597402
+    Precision : 59.45945945945946
+    Recall : 81.48148148148148
+    F1 Score : 0.6875
+
+### L1 Regularization
+- A new model is trained with **L1 (LASSO) regularization** (with varied values for the **regularization parameter &lambda; ∊ ```[0.1,0.05,0.01,0.001]```**).
+- The best performance on the training and validation set for models trained with **L1 regularization** was obtained for **&lambda; = ```0.01```**, followed very closely by **&lambda; = ```0.05```**.
+- The best performance on the testing set was seen for **&lambda; = ```0.05```** with **Accuracy = ```70.779```** and **Recall = ```75.925```**.
+- This is also validated by it achieving the highest **F1 score = ```0.645```** out of them all.  
+
+![](images/lr_l1.png)  
+- **Test Set Results for &lambda; = ```0.05```**:
+    Accuracy : 70.77922077922078
+    Precision : 56.16438356164384
+    Recall : 75.92592592592592
+    F1 Score : 0.6456692913385828
+
+### L2 Regularization
+- A new model is trained with **L2 (Ridge Regression) regularization** (with varied values for the **regularization parameter &lambda; ∊ ```[0.1,0.05,0.01,0.001]```**).
+- The best performance on the training and validation set for models trained with **L2 regularization** was obtained for **&lambda; = ```0.001```**, followed very closely by **&lambda; = ```0.01```**.
+- The best performance on the testing set was seen for **&lambda; = ```0.01```** with **Accuracy = ```54.545```** and **Recall = ```66.666```**.
+- This is also validated by it achieving the highest **F1 score = ```0.507```** out of them all.
+- It can, however, be clearly seen that model trained with **L2 regularization** performs consistently poorly as compared to **L1 regularization** or no regularization.  
+
+![](images/lr_l2.png)  
+
+- **Test Set Results for &lambda; = ```0.01```**
+    Accuracy : 54.54545454545454
+    Precision : 40.909090909090914
+    Recall : 66.66666666666666
+    F1 Score : 0.5070422535211268
+
+
+### Hyperbolic Tangent Function
+- The **sigmoid** function is replaced by the **hyperbolic tan function** i.e. **tanh(z)**.
+- The loss function remains the same, since **tanh(z)** can be mapped from **```(-1,1)```** to **```(0,1)```** as **f(z) = (tanh(z) + 1)/2**.
+- **Learning Rate = ```0.0001```** and **Max iterations = ```500```**
+- Performance on the training and validation set is similar to the performance of the original model trained using the **sigmoid** function.
+- However, the performance on the testing set with the set hyperparameters is better than the above referenced model with **Accuracy = ```75.974%```** and **Recall = ```85.185```**.
+- This is also validated by a high **F1 score = ```0.713```**.  
+
+![](images/lr_tanh.png)  
+
+- **Test Set Results**:
+    Accuracy : 75.97402597402598
+    Precision : 61.33333333333333
+    Recall : 85.18518518518519
+    F1 Score : 0.7131782945736435
+
+
+### Mini-Batch Gradient Descent
+- A new model is trained with batch size increased to simulate **Mini-Batch Gradient Descent**.
+- The batch size is varied in the range of ```[4,8,16,32,64]``` and the corresponding results analyzed.
+- The performance of **Mini-batch gradient descent** initially decreases while constantly increasing the **batch size**; however, it then increases with increase in batch size showing a somewhat **positive quadratic correlation** between the batch size and the performance of the model.
+- The convergence rate of smaller batch sizes is clearly higher as compared to larger batch sizes as can be seen from the steeper curves of the loss functions for smaller batch sizes.
+- Thus, **SGD converges much faster than Mini-BGD**, since **SGD** can basically be seen as **Mini-BGD** with **batch size = ```1```**.  
+
+![](images/lr_mini_bgd1.png)
+![](images/lr_mini_bgd2.png)
+
