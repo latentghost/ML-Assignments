@@ -7,15 +7,14 @@ from sklearn.model_selection import train_test_split
 
 
 class LogisticRegression:
-    def __init__(self,data,target,test_size=0.2,val_size=0.1,regularization=None,f='sigmoid'):
+    def __init__(self,data,target,test_size=0.2,val_size=0.1,logistic_function='sigmoid'):
         self.data       = data
         
         self.ts_size    = test_size
         self.val_size   = val_size
 
         self.target     = target
-        self.reg        = regularization
-        self.f          = f
+        self.f          = logistic_function
 
         self.X          = self.data[:,:self.target]
         self.Y          = self.data[:,self.target]
@@ -25,16 +24,27 @@ class LogisticRegression:
         if(self.f == 'sigmoid'):
             return 1/(1 + np.exp(-z))
         else:
-            return np.tanh(z)
+            return ((np.tanh(z) + 1)/2)
     
 
     def loss(self,Y_true,Y_pred):
-        loss            = np.mean(Y_true * np.log(Y_pred + 1e-1) + (1-Y_true) * np.log(1-Y_pred + 1e-1))
+        loss        = -np.mean(Y_true * np.log(Y_pred + 1e-9) + (1-Y_true) * np.log(1-Y_pred + 1e-9))
 
-        return -loss
+        loss       += self.l1 * np.sum(np.abs(self.weights))
+        loss       += self.l2 * np.sum(np.square(self.weights))
+
+        return loss
     
 
-    def train(self,lr=0.1,n_epochs=1000,weights=None,batch_size=21):
+    def train(self,lr=0.1,n_epochs=1000,weights=None,batch_size=21,regularization=None,l1_penalty=1,l2_penalty=1):
+        self.epochs     = n_epochs
+        self.lr         = lr
+        self.batch      = batch_size
+        
+        self.reg        = regularization
+        self.l1         = 0 if regularization is None else l1_penalty
+        self.l2         = 0 if regularization is None else l2_penalty
+
         self.tr_loss    = []
         self.val_loss   = []
         self.ts_loss    = []
@@ -54,10 +64,6 @@ class LogisticRegression:
         self.tr_f1      = []
         self.val_f1     = []
         self.ts_f1      = []
-
-        self.epochs     = n_epochs
-        self.lr         = lr
-        self.batch      = batch_size
 
         bias_term       = np.ones((self.X.shape[0],1))
         self.data       = np.hstack((self.X,bias_term))
@@ -89,7 +95,6 @@ class LogisticRegression:
             if(self.val_size>0):
                 ## Validation set performance metrics
                 self.Y_val_pred = self.func(np.dot(self.X_val,self.weights))
-                self.Y_val_pred = np.where(self.Y_val_pred >= 0.5, 1, 0)
 
                 self.val_loss.append(self.loss(self.Y_val,self.Y_val_pred))
 
@@ -103,7 +108,6 @@ class LogisticRegression:
             ## Training set performance metrics
             z = np.dot(self.X_train,self.weights)
             self.Y_pred = self.func(z)
-            self.Y_pred = np.where(self.Y_pred >= 0.5, 1, 0)
 
             self.tr_loss.append(self.loss(self.Y_train,self.Y_pred))
 
@@ -112,7 +116,6 @@ class LogisticRegression:
             self.tr_pr.append(p)
             self.tr_re.append(r)
             self.tr_f1.append(f)
-
 
             inds        = np.arange(self.n_s)
             np.random.shuffle(inds)
@@ -127,6 +130,9 @@ class LogisticRegression:
                 y_pred          = self.func(z_batch)
 
                 gradient        = np.dot(X_batch.T,(y_pred-Y_batch))/self.batch
+
+                gradient       += self.l1 * np.sign(self.weights)
+                gradient       += self.l2 * (2 * self.weights)
 
                 self.weights   -= self.lr * gradient
 
