@@ -1,12 +1,12 @@
 from utils import *
 
-
 class NeuralNetwork:
-    def __init__(self, N, layer_sizes, lr, activation, weight_init, bias_init, epochs, batch_size):
+    def __init__(self, N, layer_sizes, lr, activation, grad_act, weight_init, bias_init, epochs, batch_size):
         self.N = N
         self.layer_sizes = layer_sizes
         self.lr = lr
         self.activation = activation
+        self.grad_act = grad_act
         self.weight_init = weight_init
         self.bias_init = bias_init
         self.epochs = epochs
@@ -19,7 +19,7 @@ class NeuralNetwork:
         weights = []
         biases = []
 
-        for i in range(1, self.N):
+        for i in range(0, self.N):
             input_size = self.layer_sizes[i - 1]
             output_size = self.layer_sizes[i]
 
@@ -37,9 +37,9 @@ class NeuralNetwork:
         layer_output = X
         layer_outputs = [X]
         
-        for i in range(self.N - 1):
+        for i in range(self.N):
             Z = np.dot(layer_output, self.weights[i]) + self.biases[i]
-            if i == self.N - 2:
+            if i == self.N - 1:
                 layer_output = softmax(Z)
             else:
                 layer_output = self.activation(Z)
@@ -58,8 +58,8 @@ class NeuralNetwork:
         self.weights[-1] -= self.lr * dW
         self.biases[-1] -= self.lr * db
         
-        for i in range(self.N - 2, 0, -1):
-            dZ = dA_prev * (self.layer_outputs[i] > 0)
+        for i in range(self.N - 2, -1, -1):
+            dZ = dA_prev * self.grad_act(self.layer_outputs[i])
             dW = np.dot(self.layer_outputs[i - 1].T, dZ) / m
             db = np.sum(dZ, axis=0, keepdims=True) / m
             dA_prev = np.dot(dZ, self.weights[i].T)
