@@ -62,19 +62,19 @@ def softmax_gradient(A, Y):
     return dA
 
 
-def zero_init(input_size, output_size):
+def zero_init(shape):
     # Initialize weights to all 0s
-    weight = np.zeros((input_size, output_size))
+    weight = np.zeros(shape)
     return weight
 
 
-def random_init(input_size, output_size):
+def random_init(shape):
     # Initialize weights with random values between -1 and 1
-    weight = np.random.uniform(low=-1, high=1, size=(input_size, output_size))
+    weight = np.random.uniform(low=-1, high=1, size=shape)
     return weight
 
 
-def normal_init(input_size, output_size):
+def normal_init(shape):
     # Initialize weights with random values from a normal distribution with mean 0 and standard deviation 1
-    weight = np.random.normal(0, 1, size=(input_size, output_size))
+    weight = np.random.normal(0, 1, size=shape)
     return weight

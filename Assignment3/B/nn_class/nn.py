@@ -1,18 +1,13 @@
-from utils import *
+from .utils import *
 
 class NeuralNetwork:
-    def __init__(self, N, layer_sizes, lr, activation, grad_act, weight_init, bias_init, epochs, batch_size):
+    def __init__(self, N, input_size, layer_sizes, weight_init, bias_init):
         self.N = N
+        self.input_size = input_size
         self.layer_sizes = layer_sizes
-        self.lr = lr
-        self.activation = activation
-        self.grad_act = grad_act
+        
         self.weight_init = weight_init
         self.bias_init = bias_init
-        self.epochs = epochs
-        self.batch_size = batch_size
-
-        self.weights, self.biases = self.initialize_weights_and_biases()
 
 
     def initialize_weights_and_biases(self):
@@ -20,12 +15,14 @@ class NeuralNetwork:
         biases = []
 
         for i in range(0, self.N):
-            input_size = self.layer_sizes[i - 1]
+            if(i==0):
+                input_size = self.input_size
+            else:
+                input_size = self.layer_sizes[i - 1]
             output_size = self.layer_sizes[i]
 
-            # Initialize weights using the specified weight initialization function
-            weight = self.weight_init(input_size, output_size)
-            bias = np.zeros((1, output_size))
+            weight = self.weight_init(shape=(input_size, output_size))
+            bias = self.bias_init(shape=(1, output_size))
 
             weights.append(weight)
             biases.append(bias)
@@ -59,8 +56,8 @@ class NeuralNetwork:
         self.biases[-1] -= self.lr * db
         
         for i in range(self.N - 2, -1, -1):
-            dZ = dA_prev * self.grad_act(self.layer_outputs[i])
-            dW = np.dot(self.layer_outputs[i - 1].T, dZ) / m
+            dZ = dA_prev * self.grad_act(np.dot(self.layer_outputs[i], self.weights[i]) + self.biases[i])
+            dW = np.dot(self.layer_outputs[i].T, dZ) / m
             db = np.sum(dZ, axis=0, keepdims=True) / m
             dA_prev = np.dot(dZ, self.weights[i].T)
             
@@ -68,11 +65,25 @@ class NeuralNetwork:
             self.biases[i] -= self.lr * db
 
 
-    def fit(self, X, Y):
+    def fit(self, X, Y, lr, activation, grad_act, epochs, batch_size=None):
+        self.lr = lr
+
+        self.activation = activation
+        self.grad_act = grad_act
+
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.num_nodes = X.shape[0]
+
+        self.weights, self.biases = self.initialize_weights_and_biases()
+
+        if(self.batch_size is None):
+            self.batch_size = self.num_nodes
+
         for epoch in range(self.epochs):
-            for i in range(0, X.shape[0], self.batch_size):
-                X_batch = X[i:i + self.batch_size]
-                Y_batch = Y[i:i + self.batch_size]
+            for i in range(0, X.shape[0], self.batch_size): 
+                X_batch = X[i:min(X.shape[0],i + self.batch_size)]
+                Y_batch = Y[i:min(X.shape[0],i + self.batch_size)]
 
                 self.forward_pass(X_batch)
                 self.backward_pass(X_batch, Y_batch)
@@ -80,7 +91,7 @@ class NeuralNetwork:
 
     def predict(self, X):
         self.forward_pass(X)
-        return (self.layer_outputs[-1] > 0.5).astype(int)
+        return np.argmax(self.layer_outputs[-1], axis=1)
 
 
     def predict_proba(self, X):
