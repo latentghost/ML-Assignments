@@ -7,13 +7,16 @@ import time
 class CNN:
     def __init__(self):
         self.layers = []
+        self.build_model()
 
 
     def build_model(self):
-        self.layers.append(Convolutional(name='conv1', num_filters=8, stride=2, size=3, activation=relu))
-        self.layers.append(MaxPooling(name='pool1', stride=2, size=2))
-        self.layers.append(Convolutional(name='conv2', num_filters=2, stride=1, size=3, activation=relu))
-        self.layers.append(MaxPooling(name='pool2', stride=2, size=2))
+        self.layers.append(Convolutional(name='conv1', num_filters=8, stride=1, size=5, activation=relu, activation_derivative=relu_gradient))
+        self.layers.append(MaxPooling(name='pool1', stride=2, size=4, num_filters=4))
+        self.layers.append(Convolutional(name='conv2', num_filters=4, stride=1, size=4, activation=relu, activation_derivative=relu_gradient))
+        self.layers.append(MaxPooling(name='pool2', stride=2, size=4, num_filters=2))
+        self.layers.append(Convolutional(name='conv3', num_filters=1, stride=1, size=3, activation=relu, activation_derivative=relu_gradient))
+        self.layers.append(MaxPooling(name='pool3', stride=2, size=2, num_filters=1))
 
 
     def forward(self, inp):
@@ -24,11 +27,11 @@ class CNN:
 
     def backward(self, gradient, learning_rate):
         for layer in reversed(self.layers):
-            gradient = layer.backward(gradient, learning_rate)
+            gradient = layer.backward(gradient)
 
 
     def train(self, train_data, train_labels, val_data, val_labels, num_epochs, learning_rate, validate, regularization, verbose):
-        history = {'loss': [], 'accuracy': [], 'val_loss': [], 'val_accuracy': []}
+        self.history = {'loss': [], 'accuracy': [], 'val_loss': [], 'val_accuracy': []}
 
         for epoch in range(num_epochs):
             print(f'\nEpoch {epoch+1}/{num_epochs}:')
@@ -43,21 +46,19 @@ class CNN:
                     accuracy = (num_corr / (i + 1)) * 100
                     loss = tmp_loss / (i + 1)
 
-                    history['loss'].append(loss)
-                    history['accuracy'].append(accuracy)
+                    self.history['loss'].append(loss)
+                    self.history['accuracy'].append(accuracy)
 
                     if validate:
-                        indices = np.random.permutation(val_data.shape[0])
-
                         val_loss, val_accuracy = self.predict(
-                            val_data[indices,:],
-                            val_labels[indices],
+                            val_data,
+                            val_labels,
                             regularization,
                             verbose=0
                         )
 
-                        history['val_loss'].append(val_loss)
-                        history['val_accuracy'].append(val_accuracy)
+                        self.history['val_loss'].append(val_loss)
+                        self.history['val_accuracy'].append(val_accuracy)
 
                         if verbose:
                             print(f'[Step {i+1}]: Loss {loss} | Accuracy: {accuracy} | Time: {time.time()-initial_time} seconds | '
@@ -79,17 +80,15 @@ class CNN:
                 if np.argmax(tmp_output) == label:
                     num_corr += 1
 
-                gradient = np.zeros(10)
-                gradient[label] = -1 / tmp_output[label] + np.sum(
-                    [2 * regularization * np.sum(np.absolute(layer.get_weights())) for layer in self.layers])
+                gradient = np.zeros((2,1,1))
+                gradient[label] = (-1 / tmp_output[label]) + np.sum([2 * regularization * np.sum(np.absolute(layer.get_weights())) for layer in self.layers])
 
                 # learning_rate = lr_schedule(learning_rate, iteration=i)
 
                 self.backward(gradient, learning_rate)
 
-        if verbose:
-            print(f'Train Loss: {history["loss"][-1]}')
-            print(f'Train Accuracy: {history["accuracy"][-1]}')
+        print(f'Train Loss: {self.history["loss"][-1]}')
+        print(f'Train Accuracy: {self.history["accuracy"][-1]}')
 
 
     def predict(self, X, y, regularization, verbose):
